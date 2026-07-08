@@ -1,0 +1,14 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "End-to-end tests for the Real World App (RWA-142 / RWA-118)",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "keywords": [],
+  "author": "Anastasia Smorodin",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

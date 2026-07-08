@@ -1,0 +1,65 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: Install app dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install e2e dependencies
+        run: cd e2e && npm ci
+
+      - name: Install Playwright browsers
+        run: cd e2e && npx playwright install chromium --with-deps
+
+      - name: Seed the database
+        run: yarn db:seed:dev
+
+      - name: Start the application
+        run: yarn dev &
+        env:
+          NODE_ENV: development
+
+      - name: Wait for app to be ready
+        run: |
+          echo "Waiting for frontend..."
+          npx wait-on http://localhost:3000 --timeout 30000
+          echo "Waiting for API..."
+          npx wait-on http://localhost:3001 --timeout 30000
+          echo "App is ready!"
+
+      - name: Run E2E tests
+        run: yarn test:e2e
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: e2e/screenshots/
+          retention-days: 14
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14
